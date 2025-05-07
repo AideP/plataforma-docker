@@ -1,8 +1,10 @@
-from flask import Flask, jsonify
+from flask_cors import CORS
+from flask import Flask, jsonify, request
 import mysql.connector
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 # Configuración desde variables de entorno o valores por defecto
 DB_HOST = os.environ.get("DB_HOST", "db")           # nombre del servicio en docker-compose
@@ -35,6 +37,27 @@ def obtener_usuarios():
         return jsonify(usuarios)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/usuarios', methods=['POST'])
+def insertar_usuario():
+    try:
+        datos = request.get_json()
+        nombre = datos.get("nombre")
+
+        if not nombre:
+            return jsonify({"error": "Falta el campo 'nombre'"}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO usuarios (nombre) VALUES (%s)", (nombre,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": f"Usuario '{nombre}' agregado correctamente"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
