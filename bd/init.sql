@@ -1,4 +1,12 @@
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nombre VARCHAR(100)
+  nombre VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS boletos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT,
+  evento VARCHAR(100),
+  cantidad INT,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );

@@ -58,6 +58,62 @@ def insertar_usuario():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/boletos', methods=['POST'])
+def comprar_boleto():
+    try:
+        datos = request.get_json()
+        usuario_id = datos.get("usuario_id")
+        evento = datos.get("evento")
+        cantidad = datos.get("cantidad")
+
+        if not usuario_id or not evento or not cantidad:
+            return jsonify({"error": "Datos incompletos"}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO boletos (usuario_id, evento, cantidad) VALUES (%s, %s, %s)",
+                       (usuario_id, evento, cantidad))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": f"Boleto para '{evento}' comprado correctamente"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/conciertos', methods=['GET'])
+def obtener_conciertos():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, precio FROM conciertos")
+        conciertos = [{"id": row[0], "nombre": row[1], "precio": float(row[2])} for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        return jsonify(conciertos)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/conciertos', methods=['POST'])
+def agregar_concierto():
+    try:
+        datos = request.get_json()
+        nombre = datos.get("nombre")
+        precio = datos.get("precio")
+
+        if not nombre or precio is None:
+            return jsonify({"error": "Faltan datos"}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO conciertos (nombre, precio) VALUES (%s, %s)", (nombre, precio))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"mensaje": f"Concierto '{nombre}' agregado correctamente"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
